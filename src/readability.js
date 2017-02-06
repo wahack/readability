@@ -174,4 +174,4 @@ function read(html, options, callback) {
   }
 }
 
-module.exports = read;
+exports.read = read;
