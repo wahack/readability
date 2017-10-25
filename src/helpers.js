@@ -2,7 +2,7 @@ var url = require("url");
 
 // All of the regular expressions in use within readability.
 var regexps = {
-  unlikelyCandidatesRe: /combx|modal|lightbox|comment|disqus|foot|header|menu|meta|nav|rss|shoutbox|sidebar|sponsor|social|teaserlist|time|tweet|twitter/i,
+  unlikelyCandidatesRe: /combx|modal|comment|disqus|foot|header|menu|meta|nav|rss|shoutbox|sidebar|sponsor|social|teaserlist|time|tweet|twitter/i,
   okMaybeItsACandidateRe: /and|article|body|column|main|story|entry|^post/im,
   positiveRe: /article|body|content|entry|hentry|page|pagination|post|section|chapter|description|main|blog|text/i,
   negativeRe: /combx|comment|contact|foot|footer|footnote|link|media|meta|promo|related|scroll|shoutbox|sponsor|utility|tags|widget/i,
@@ -116,11 +116,20 @@ var grabArticle = module.exports.grabArticle = function(document, preserveUnlike
         // EXPERIMENTAL
         Array.prototype.slice.call(node.childNodes).forEach(function(childNode) {
           if (childNode.nodeType == 3 /*TEXT_NODE*/ ) {
-            // use span instead of p. Need more tests.
-            dbg("replacing text node with a span tag with the same content.");
-            var span = document.createElement('span');
-            span.innerHTML = childNode.nodeValue;
-            childNode.parentNode.replaceChild(span, childNode);
+            var nextSibling = childNode.nextSibling
+            if (nextSibling && nextSibling.tagName == 'BR') {
+              dbg("replacing text node followed by br with a p tag with the same content.");
+              var p = document.createElement('p');
+              p.innerHTML = childNode.nodeValue;
+              childNode.parentNode.removeChild(nextSibling)
+              childNode.parentNode.replaceChild(p, childNode);
+            } else {
+              // use span instead of p. Need more tests.
+              dbg("replacing text node with a span tag with the same content.");
+              var span = document.createElement('span');
+              span.innerHTML = childNode.nodeValue;
+              childNode.parentNode.replaceChild(span, childNode);
+            }
           }
         });
       }
@@ -306,7 +315,7 @@ function killBreaks(e) {
  * @param Element
  * @return string
  **/
-getInnerText = exports.getInnerText = function(e, normalizeSpaces) {
+var getInnerText = exports.getInnerText = function(e, normalizeSpaces) {
   var textContent = "";
 
   normalizeSpaces = (typeof normalizeSpaces == 'undefined') ? true : normalizeSpaces;
